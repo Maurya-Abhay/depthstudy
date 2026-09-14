@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Map CSS Variables to Tailwind v4 Theme Tokens */
+@theme {
+  --color-bg-main: var(--bg-main);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-muted: var(--bg-muted);
+  --color-border-color: var(--border-color);
+  --color-border-strong: var(--border-strong);
+  
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-tint: var(--accent-tint);
+}
+
+:root {
+  --bg-main: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-muted: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-strong: #cbd5e1;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-tint: #e0e7ff;
+  
+  --scrollbar-thumb: #cbd5e1;
+}
+
+.dark {
+  --bg-main: #07090e;
+  --bg-surface: #0d111c;
+  --bg-muted: #141b2d;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-tint: rgba(99, 102, 241, 0.15);
+  
+  --scrollbar-thumb: #1e293b;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Text Selection Styling */
+::selection {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Dynamic Input Elements Dark Theme */
+input, textarea, select {
+  color-scheme: light;
+}
+
+.dark input, 
+.dark textarea, 
+.dark select {
+  color-scheme: dark;
+}
+
+/* Custom Thin Scrollbar */
+::-webkit-scrollbar { 
+  width: 5px; 
+  height: 5px; 
+}
+
+::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+
+::-webkit-scrollbar-thumb { 
+  background: var(--scrollbar-thumb); 
+  border-radius: 9999px; 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+  background: var(--text-subtle); 
+}

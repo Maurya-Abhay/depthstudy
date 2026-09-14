@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Depth Study icon">
+  <rect width="512" height="512" rx="90" fill="#0b0f19"/>
+  <path d="M256 60 L452 136 V376 L256 452 L60 376 Z" fill="#4338ca" opacity="0.85"/>
+  <path d="M180 256 L224 300 L328 196" stroke="#ffffff" stroke-width="28" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="352" cy="256" r="36" fill="#a78bfa"/>
+  <circle cx="352" cy="256" r="18" fill="#0b0f19"/>
+</svg>
