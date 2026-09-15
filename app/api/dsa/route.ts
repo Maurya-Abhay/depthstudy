@@ -81,13 +81,53 @@ class Main {
 `;
 }
 
+function detectLanguage(source: string): 'java' | 'javascript' {
+  const javaMarkers = /\b(public|private|protected)\s|System\.out|\bint\[\]|\bString\[\]|static\s+void\s+main/;
+  if (javaMarkers.test(source)) return 'java';
+  const jsMarkers = /\b(const|let|var|function)\b|=>|new Map\(|new Set\(|console\.log/;
+  if (jsMarkers.test(source)) return 'javascript';
+  return 'java';
+}
+
+// Wraps a JavaScript Solution class in a Node harness that reads stdin lines,
+// invokes the first method of Solution with parsed arguments, and prints the
+// result — mirroring what prepareJavaSource does for Java submissions.
+function prepareJsSource(source: string) {
+  return `const __input = require('fs').readFileSync(0, 'utf8').trim();
+const __lines = __input ? __input.split(/\\r?\\n/) : [];
+${source}
+function __run() {
+  const __parse = (t) => {
+    t = String(t).trim();
+    if (/^\\[.*\\]$/.test(t)) { try { return JSON.parse(t); } catch (e) { /* keep raw */ } }
+    if (/^-?\\d+$/.test(t)) return parseInt(t, 10);
+    if (/^-?\\d*\\.\\d+$/.test(t)) return parseFloat(t);
+    if (t === 'true') return true;
+    if (t === 'false') return false;
+    return t.replace(/^"(.*)"$/, '$1');
+  };
+  const __instance = new Solution();
+  const __names = Object.getOwnPropertyNames(Object.getPrototypeOf(__instance)).filter((n) => n !== 'constructor');
+  let __fn = null;
+  for (const n of __names) { if (typeof __instance[n] === 'function') { __fn = __instance[n]; break; } }
+  if (!__fn) throw new Error('Solution must define a method.');
+  const __args = __lines.slice(0, __fn.length).map(__parse);
+  const __result = __fn.apply(__instance, __args);
+  if (Array.isArray(__result)) console.log(JSON.stringify(__result));
+  else if (__result !== null && __result !== undefined) console.log(String(__result));
+}
+__run();
+`;
+}
+
 function comparableOutput(value: string) {
   return value.trim().replace(/\s+/g, '');
 }
 
 async function execute(apiUrl: string, key: string | undefined, source: string, stdin: string) {
   const baseUrl = apiUrl.replace(/\/$/, '');
-  const javaSource = prepareJavaSource(source);
+  const languageId = detectLanguage(source) === 'javascript' ? 63 : 62;
+  const finalSource = languageId === 63 ? prepareJsSource(source) : prepareJavaSource(source);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8_000);
   let response: Response;
@@ -95,7 +135,7 @@ async function execute(apiUrl: string, key: string | undefined, source: string, 
     response = await fetch(`${baseUrl}/submissions?base64_encoded=false&wait=false`, {
       method: 'POST',
       headers: getJudgeHeaders(apiUrl, key),
-      body: JSON.stringify({ language_id: 62, source_code: javaSource, stdin }),
+      body: JSON.stringify({ language_id: languageId, source_code: finalSource, stdin }),
       cache: 'no-store', signal: controller.signal,
     });
   } finally { clearTimeout(timer); }
@@ -156,7 +196,7 @@ export async function POST(request: Request) {
     const { data: submission, error: submissionError } = await supabase.from('dsa_submissions').insert({
       user_id: user.id,
       problem_id: problem.id,
-      language: 'java',
+      language: detectLanguage(source),
       source_code: source,
       status: accepted ? 'accepted' : 'rejected',
       score: Math.round((passed / Math.max(1, Math.min(cases.length, 15))) * 100),

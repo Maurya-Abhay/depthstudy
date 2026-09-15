@@ -118,6 +118,13 @@ export function ProblemWorkspace({
     }
   }
 
+  // Mirror server-side language detection so highlighting matches the runner
+  const editorLanguage =
+    /\b(public|private|protected)\s|System\.out|\bint\[\]|\bString\[\]|static\s+void\s+main/.test(code) ||
+    !/(\bconst\b|\blet\b|\bvar\b|\bfunction\b|=>|new Map\(|console\.log)/.test(code)
+      ? 'java'
+      : 'javascript';
+
   const topicGroups = topics
     .map((topic) => ({
       topic,
@@ -342,7 +349,9 @@ export function ProblemWorkspace({
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-2 flex-shrink-0">
           <div className="flex items-center gap-2">
             <Code2 size={16} className="text-indigo-600 dark:text-indigo-400" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Java Code Workspace</h2>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+              {editorLanguage === 'javascript' ? 'JavaScript Code Workspace' : 'Java Code Workspace'}
+            </h2>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -392,7 +401,7 @@ export function ProblemWorkspace({
         <div className="flex-1 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800/80 bg-slate-900 dark:bg-[#1e1e1e] min-h-[350px]">
           <Editor
             theme={theme === 'dark' ? 'vs-dark' : 'light'}
-            language="java"
+            language={editorLanguage}
             value={code}
             onChange={(val) => setCode(val ?? '')}
             options={{
