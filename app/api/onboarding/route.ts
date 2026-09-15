@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/services/supabase-server';
 import { rateLimit, rateLimitedResponse, readJson } from '@/services/security';
-import { saveOnboarding, getOnboardingStatus } from '@/services/onboarding';
+import { saveOnboarding, completeOnboarding, getOnboardingStatus } from '@/services/onboarding';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +49,13 @@ export async function POST(request: Request) {
 
   if (!result.ok) {
     return NextResponse.json({ errors: result.errors }, { status: 400 });
+  }
+
+  // Mark onboarding as completed — without this the (protected) layout would
+  // keep redirecting the user back to /user/onboarding after a successful save.
+  const completed = await completeOnboarding(user.id);
+  if (!completed.ok) {
+    return NextResponse.json({ error: completed.error ?? 'Failed to complete onboarding.' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, data: result.data }, {

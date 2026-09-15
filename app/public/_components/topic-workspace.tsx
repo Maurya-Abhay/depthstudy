@@ -21,6 +21,8 @@ import {
   HelpCircle,
   Code2,
   Briefcase,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import type { Category, Topic } from '@/types';
@@ -75,9 +77,13 @@ export function TopicWorkspace({
   const [notesOpen, setNotesOpen] = useState(Boolean(initialNote));
   const [bookmarked, setBookmarked] = useState(initialBookmarked);
   const [bookmarkBusy, setBookmarkBusy] = useState(false);
+  
+  // Desktop sidebar collapse state
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [loadingTopic, setLoadingTopic] = useState(false);
+  // Mobile drawer toggle state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const [loadingTopic, setLoadingTopic] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -153,18 +159,17 @@ export function TopicWorkspace({
     );
   }
 
-  // Topic URL builder — supports both path style (/study/topic/slug)
-  // and query style (/dashboard/notes?topic=slug) portals.
   function topicHref(slug: string) {
     return portalPath.endsWith('=')
       ? `${portalPath}${encodeURIComponent(slug)}`
       : `${portalPath}/${slug}`;
   }
 
-
   async function goToTopic(slug: string) {
     if (slug === topic.slug || loadingTopic) return;
     setLoadingTopic(true);
+    // Mobile view me navigate karne par menu close kar denge
+    setMobileMenuOpen(false);
     try {
       const response = await fetch(`/api/study/topic?slug=${encodeURIComponent(slug)}`);
       if (!response.ok) throw new Error('Topic request failed.');
@@ -291,15 +296,101 @@ export function TopicWorkspace({
   const prevItem = currentIndex > 0 ? courseItems[currentIndex - 1] : undefined;
   const nextItem = currentIndex >= 0 && currentIndex < courseItems.length - 1 ? courseItems[currentIndex + 1] : undefined;
 
+  // Reusable Sidebar Menu Content
+  const SidebarContent = () => (
+    <>
+      <div className="mb-3 rounded-lg border border-zinc-200 bg-zinc-100/70 dark:border-white/5 dark:bg-zinc-900/60 p-3">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-semibold text-zinc-600 dark:text-zinc-400">Total Progress</span>
+          <span className="font-bold text-indigo-600 dark:text-indigo-400">{courseProgress}%</span>
+        </div>
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+          <div
+            style={{ width: `${courseProgress}%` }}
+            className="h-full rounded-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300"
+          />
+        </div>
+        <p className="mt-1.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+          {completedTopics}/{courseItems.length} finished
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        {categoryNames.map((cat) => {
+          const categoryItems = courseItems.filter((item) => item.categoryName === cat);
+          const isOpen = openCategories.includes(cat);
+          const categoryDone = categoryItems.filter((item) => item.progress === 100).length;
+
+          return (
+            <div key={cat} className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/5">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between bg-zinc-100 dark:bg-zinc-900/40 px-3 py-2 text-left hover:bg-zinc-200/60 dark:hover:bg-zinc-800/50"
+                onClick={() => toggleCategory(cat)}
+              >
+                <div className="truncate pr-2">
+                  <strong className="block truncate text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                    {cat}
+                  </strong>
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    {categoryDone}/{categoryItems.length} finished
+                  </span>
+                </div>
+                <ChevronDown
+                  size={14}
+                  className={`text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {isOpen && (
+                <div className="space-y-1 bg-white dark:bg-zinc-950/80 p-1.5">
+                  {categoryItems.map((item) => {
+                    const isCurrent = item.id === topic.id;
+                    return (
+                      <Link
+                        key={item.id}
+                        href={topicHref(item.slug)}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          goToTopic(item.slug);
+                        }}
+                        className={`flex items-center gap-2 rounded-md px-2.5 py-2 transition text-xs font-medium ${
+                          isCurrent
+                            ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold dark:bg-indigo-600/20 dark:text-indigo-300 dark:border-indigo-500/30'
+                            : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900'
+                        }`}
+                      >
+                        <span
+                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px] ${
+                            item.progress === 100
+                              ? 'border-emerald-500 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                              : 'border-zinc-300 dark:border-zinc-700'
+                          }`}
+                        >
+                          {item.progress === 100 ? <Check size={10} /> : null}
+                        </span>
+                        <span className="truncate">{item.title}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+
   return (
     <div
-      className={`flex w-full gap-2 font-sans transition-all bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 ${
+      className={`relative flex w-full gap-2 font-sans transition-all bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 ${
         isFullscreen ? 'fixed inset-0 z-50 h-screen p-3' : fit ? 'h-full p-2' : 'h-[calc(100vh-3.5rem)] p-2'
       }`}
     >
-      {/* LEFT SIDEBAR */}
+      {/* 1. DESKTOP SIDEBAR (Visible only on medium screens and up: md:flex) */}
       <aside
-        className={`flex shrink-0 flex-col rounded-xl border border-zinc-200 bg-white dark:border-white/10 dark:bg-[#07090e] shadow-sm transition-all duration-300 ${
+        className={`hidden md:flex shrink-0 flex-col rounded-xl border border-zinc-200 bg-white dark:border-white/10 dark:bg-[#07090e] shadow-sm transition-all duration-300 ${
           sidebarOpen ? 'w-72' : 'w-12'
         }`}
       >
@@ -320,86 +411,7 @@ export function TopicWorkspace({
 
         {sidebarOpen ? (
           <div className="flex flex-1 flex-col overflow-y-auto p-2.5">
-            <div className="mb-3 rounded-lg border border-zinc-200 bg-zinc-100/70 dark:border-white/5 dark:bg-zinc-900/60 p-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-zinc-600 dark:text-zinc-400">Total Progress</span>
-                <span className="font-bold text-indigo-600 dark:text-indigo-400">{courseProgress}%</span>
-              </div>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
-                <div
-                  style={{ width: `${courseProgress}%` }}
-                  className="h-full rounded-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300"
-                />
-              </div>
-              <p className="mt-1.5 text-[11px] text-zinc-500 dark:text-zinc-400">
-                {completedTopics}/{courseItems.length} finished
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              {categoryNames.map((cat) => {
-                const categoryItems = courseItems.filter((item) => item.categoryName === cat);
-                const isOpen = openCategories.includes(cat);
-                const categoryDone = categoryItems.filter((item) => item.progress === 100).length;
-
-                return (
-                  <div key={cat} className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/5">
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between bg-zinc-100 dark:bg-zinc-900/40 px-3 py-2 text-left hover:bg-zinc-200/60 dark:hover:bg-zinc-800/50"
-                      onClick={() => toggleCategory(cat)}
-                    >
-                      <div className="truncate pr-2">
-                        <strong className="block truncate text-xs font-bold text-zinc-800 dark:text-zinc-200">
-                          {cat}
-                        </strong>
-                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                          {categoryDone}/{categoryItems.length} finished
-                        </span>
-                      </div>
-                      <ChevronDown
-                        size={14}
-                        className={`text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-
-                    {isOpen && (
-                      <div className="space-y-1 bg-white dark:bg-zinc-950/80 p-1.5">
-                        {categoryItems.map((item) => {
-                          const isCurrent = item.id === topic.id;
-                          return (
-                            <Link
-                              key={item.id}
-                              href={topicHref(item.slug)}
-                              onClick={(event) => {
-                                event.preventDefault();
-                                goToTopic(item.slug);
-                              }}
-                              className={`flex items-center gap-2 rounded-md px-2.5 py-2 transition text-xs font-medium ${
-                                isCurrent
-                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold dark:bg-indigo-600/20 dark:text-indigo-300 dark:border-indigo-500/30'
-                                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900'
-                              }`}
-                            >
-                              <span
-                                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px] ${
-                                  item.progress === 100
-                                    ? 'border-emerald-500 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                                    : 'border-zinc-300 dark:border-zinc-700'
-                                }`}
-                              >
-                                {item.progress === 100 ? <Check size={10} /> : null}
-                              </span>
-                              <span className="truncate">{item.title}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <SidebarContent />
           </div>
         ) : (
           <div className="flex flex-1 flex-col items-center pt-4">
@@ -408,12 +420,52 @@ export function TopicWorkspace({
         )}
       </aside>
 
+      {/* 2. MOBILE DRAWER SIDEBAR (Sliding Drawer on Mobile Only) */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Drawer Panel */}
+          <aside className="relative flex w-80 max-w-[85vw] flex-col bg-white dark:bg-[#07090e] shadow-2xl border-r border-zinc-200 dark:border-white/10 z-10">
+            <div className="flex h-12 items-center justify-between border-b border-zinc-200 dark:border-white/10 px-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {courseTitle || 'Modules'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3">
+              <SidebarContent />
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* MAIN CONTENT AREA */}
       <main className="flex flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-white/10 dark:bg-[#07090e] shadow-sm">
-        <div className="flex h-11 shrink-0 items-center justify-between border-b border-zinc-200 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/40 px-4">
-          <h1 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{topic.title}</h1>
+        <div className="flex h-11 shrink-0 items-center justify-between border-b border-zinc-200 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/40 px-3 md:px-4">
+          <div className="flex items-center gap-2 truncate pr-2">
+            {/* Mobile Menu Button - Appears only on Mobile View */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex md:hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition"
+              title="Open Curriculum Menu"
+            >
+              <Menu size={18} />
+            </button>
+            <h1 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{topic.title}</h1>
+          </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             <button
               onClick={toggleFullscreen}
               className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition"
@@ -425,15 +477,15 @@ export function TopicWorkspace({
             <button
               onClick={toggleBookmark}
               disabled={bookmarkBusy}
-              className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition"
+              className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2.5 md:px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition"
             >
               <Bookmark size={14} className={bookmarked ? 'fill-indigo-500 text-indigo-500' : ''} />
-              <span>{bookmarked ? 'Saved' : 'Save'}</span>
+              <span className="hidden sm:inline">{bookmarked ? 'Saved' : 'Save'}</span>
             </button>
 
             <button
               onClick={complete}
-              className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition"
+              className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 md:px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition"
             >
               <CheckCircle2 size={14} />
               <span>Complete</span>
@@ -443,7 +495,7 @@ export function TopicWorkspace({
 
         <div
           ref={contentRef}
-          className={`flex-1 overflow-y-auto p-6 space-y-6 transition-opacity duration-200 ${
+          className={`flex-1 overflow-y-auto p-4 md:p-6 space-y-6 transition-opacity duration-200 ${
             loadingTopic ? 'pointer-events-none opacity-40' : 'opacity-100'
           }`}
         >
@@ -455,7 +507,7 @@ export function TopicWorkspace({
                 <a
                   href={`#${id}`}
                   key={id}
-                  className="rounded-md border border-zinc-200 bg-zinc-100/80 px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-indigo-50 hover:text-indigo-600 dark:border-white/5 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:border-indigo-500/30 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300 transition"
+                  className="rounded-md border border-zinc-200 bg-zinc-100/80 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-indigo-50 hover:text-indigo-600 dark:border-white/5 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:border-indigo-500/30 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300 transition"
                 >
                   {label}
                 </a>

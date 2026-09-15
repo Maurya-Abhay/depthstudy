@@ -118,7 +118,8 @@ export function OnboardingWizard() {
         setError(data.errors?.join(', ') || data.error || 'Failed to save setup.');
         return;
       }
-      router.push('/dashboard');
+      // replace() (not push()) so Back button never returns to completed onboarding
+      router.replace('/dashboard');
       router.refresh();
     } catch {
       setError('Network error. Please try again.');
