@@ -45,69 +45,69 @@ export default async function Page() {
 
   return (
     <UserShell>
-      <div className="mx-auto max-w-7xl space-y-3">
+      <div className="mx-auto max-w-7xl space-y-4">
         {/* Header Section */}
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800/80 pb-3">
           <div>
-            <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white sm:text-lg">
+            <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white sm:text-lg">
               Assessments
             </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Practice with focused tests and track your attempt history.
             </p>
           </div>
-          <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
+          <div className="self-start sm:self-auto rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
             {tests?.length ?? 0} tests available
-          </span>
+          </div>
         </div>
 
         {/* Overview Metric Cards */}
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121824] p-3 shadow-sm">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#121824] p-3.5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-slate-700">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-              <span className="text-[10px] font-medium">Available</span>
-              <ClipboardCheck size={14} className="text-indigo-600 dark:text-indigo-400" />
+              <span className="text-[11px] font-medium uppercase tracking-wide">Available</span>
+              <ClipboardCheck size={16} className="text-indigo-600 dark:text-indigo-400" />
             </div>
-            <div className="mt-1 font-mono text-base font-black text-slate-900 dark:text-white">{tests?.length ?? 0}</div>
+            <div className="mt-2 font-mono text-xl font-extrabold text-slate-900 dark:text-white">{tests?.length ?? 0}</div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121824] p-3 shadow-sm">
+          <div className="rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#121824] p-3.5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-slate-700">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-              <span className="text-[10px] font-medium">Attempts</span>
-              <Target size={14} className="text-blue-600 dark:text-blue-400" />
+              <span className="text-[11px] font-medium uppercase tracking-wide">Attempts</span>
+              <Target size={16} className="text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="mt-1 font-mono text-base font-black text-slate-900 dark:text-white">{attempts.length}</div>
+            <div className="mt-2 font-mono text-xl font-extrabold text-slate-900 dark:text-white">{attempts.length}</div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121824] p-3 shadow-sm">
+          <div className="rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#121824] p-3.5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-slate-700">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-              <span className="text-[10px] font-medium">Passed</span>
-              <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[11px] font-medium uppercase tracking-wide">Passed</span>
+              <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
             </div>
-            <div className="mt-1 font-mono text-base font-black text-slate-900 dark:text-white">{passed}</div>
+            <div className="mt-2 font-mono text-xl font-extrabold text-slate-900 dark:text-white">{passed}</div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121824] p-3 shadow-sm">
+          <div className="rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#121824] p-3.5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-slate-700">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-              <span className="text-[10px] font-medium">Avg Score</span>
-              <Award size={14} className="text-amber-600 dark:text-amber-400" />
+              <span className="text-[11px] font-medium uppercase tracking-wide">Avg Score</span>
+              <Award size={16} className="text-amber-600 dark:text-amber-400" />
             </div>
-            <div className="mt-1 font-mono text-base font-black text-slate-900 dark:text-white">{average}%</div>
+            <div className="mt-2 font-mono text-xl font-extrabold text-slate-900 dark:text-white">{average}%</div>
           </div>
         </div>
 
         {/* Content Section: Tests & Attempts */}
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* Left Column: Assessment Library */}
-          <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121824] p-3.5 shadow-sm lg:col-span-7">
-            <div className="mb-2.5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <section className="rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#121824] p-4 shadow-xs lg:col-span-7 flex flex-col">
+            <div className="mb-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Assessment Library
-              </span>
+              </h2>
             </div>
 
             {tests?.length ? (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[350px] overflow-y-auto pr-1">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[380px] overflow-y-auto pr-1">
                 {tests.map((test) => {
                   const courseRelation = test.courses as CourseRelation;
                   const course = Array.isArray(courseRelation) ? courseRelation[0] : courseRelation;
@@ -116,89 +116,89 @@ export default async function Page() {
                     <Link
                       key={test.id}
                       href={`/tests/${test.id}`}
-                      className="group flex items-center justify-between gap-2.5 rounded-lg px-2 py-2.5 transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                      className="group flex items-center justify-between gap-3 rounded-lg px-2.5 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 group-hover:border-indigo-500/40 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                          <ClipboardCheck size={13} />
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:border-indigo-500/40 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          <ClipboardCheck size={15} />
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <strong className="block truncate text-xs font-semibold text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                          <h3 className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {test.title}
-                          </strong>
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
-                            <span className="truncate">{course?.title || 'Assessment'}</span>
-                            <span>•</span>
-                            <span className="text-emerald-600 dark:text-emerald-400">{test.passing_score}% pass</span>
-                            <span>•</span>
-                            <span className="inline-flex items-center gap-0.5">
-                              <Clock3 size={10} />
+                          </h3>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                            <span className="truncate max-w-[140px]">{course?.title || 'General Assessment'}</span>
+                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">{test.passing_score}% pass</span>
+                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className="inline-flex items-center gap-1">
+                              <Clock3 size={11} />
                               {test.duration_minutes}m
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                      <div className="flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 shrink-0">
                         <span>Start</span>
-                        <ChevronRight size={13} />
+                        <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
                       </div>
                     </Link>
                   );
                 })}
               </div>
             ) : (
-              <div className="py-8 text-center text-xs text-slate-500">No published tests yet</div>
+              <div className="py-12 text-center text-xs text-slate-500">No published tests available yet</div>
             )}
           </section>
 
           {/* Right Column: Recent Activity */}
-          <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121824] p-3.5 shadow-sm lg:col-span-5">
-            <div className="mb-2.5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <section className="rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#121824] p-4 shadow-xs lg:col-span-5 flex flex-col">
+            <div className="mb-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Recent Attempts
-              </span>
+              </h2>
             </div>
 
             {attempts.length ? (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[350px] overflow-y-auto pr-1">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[380px] overflow-y-auto pr-1">
                 {attempts.map((attempt) => {
                   const testRelation = attempt.tests as TestRelation;
                   const test = Array.isArray(testRelation) ? testRelation[0] : testRelation;
 
                   return (
-                    <div key={attempt.id} className="flex items-center justify-between gap-2 py-2 px-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border ${
+                    <div key={attempt.id} className="flex items-center justify-between gap-3 py-2.5 px-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
                             attempt.passed
                               ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                               : 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400'
                           }`}
                         >
-                          {attempt.passed ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                        </span>
+                          {attempt.passed ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                        </div>
 
                         <div className="min-w-0">
-                          <strong className="block truncate text-[11px] font-semibold text-slate-800 dark:text-white">
+                          <h3 className="truncate text-xs font-medium text-slate-800 dark:text-slate-200">
                             {test?.title || 'Assessment attempt'}
-                          </strong>
-                          <span className="text-[9px] text-slate-400">
+                          </h3>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500">
                             {attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleDateString() : 'In progress'}
-                          </span>
+                          </p>
                         </div>
                       </div>
 
-                      <b className={`text-xs font-black ${attempt.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                      <div className={`text-xs font-bold font-mono px-2 py-0.5 rounded-md ${attempt.passed ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                         {attempt.score ?? 0}%
-                      </b>
+                      </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="py-8 text-center text-xs text-slate-500">No attempts yet</div>
+              <div className="py-12 text-center text-xs text-slate-500">No attempts recorded yet</div>
             )}
           </section>
         </div>

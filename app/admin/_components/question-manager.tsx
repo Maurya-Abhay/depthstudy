@@ -35,6 +35,19 @@ type Question = {
   published: boolean;
 };
 
+// All supported question types (mirrors the questions.type column values)
+export const QUESTION_TYPES: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'mcq', label: 'MCQ' },
+  { value: 'true_false', label: 'True / False' },
+  { value: 'code_output', label: 'Code Output' },
+  { value: 'code_fix', label: 'Code Fix' },
+  { value: 'scenario', label: 'Scenario Based' },
+  { value: 'debugging', label: 'Debugging' },
+  { value: 'best_practice', label: 'Best Practice' },
+  { value: 'accessibility', label: 'Accessibility' },
+  { value: 'seo', label: 'SEO' },
+];
+
 const EXAMPLE_JSON = JSON.stringify(
   [
     {
@@ -43,6 +56,30 @@ const EXAMPLE_JSON = JSON.stringify(
       options: ['<a>', '<link>', '<href>', '<nav>'],
       answer: '<a>',
       explanation: 'The anchor element creates hyperlinks.',
+      published: false,
+    },
+    {
+      prompt: 'HTML is a programming language.',
+      type: 'true_false',
+      options: ['True', 'False'],
+      answer: 'False',
+      explanation: 'HTML is a markup language, not a programming language.',
+      published: false,
+    },
+    {
+      prompt: 'What does the following JS print? console.log(typeof null)',
+      type: 'code_output',
+      options: ['"null"', '"object"', '"undefined"'],
+      answer: '"object"',
+      explanation: 'typeof null returns "object" due to a legacy JavaScript quirk.',
+      published: false,
+    },
+    {
+      prompt: 'A loop never terminates. Which line is the bug?',
+      type: 'debugging',
+      options: ['Line 1: let i = 0', 'Line 2: i++ should be i--'],
+      answer: 'Line 2: i++ should be i--',
+      explanation: 'Incrementing instead of decrementing prevents termination.',
       published: false,
     },
   ],
@@ -55,6 +92,7 @@ export function QuestionManager() {
   const [items, setItems] = useState<Question[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [query, setQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [mode, setMode] = useState<'bulk' | 'manual'>('bulk');
   const [categoryId, setCategoryId] = useState('');
   const [editing, setEditing] = useState('');
@@ -91,9 +129,10 @@ export function QuestionManager() {
   const filtered = useMemo(
     () =>
       items.filter((x) =>
+        (!typeFilter || x.type === typeFilter) &&
         `${x.prompt} ${x.explanation}`.toLowerCase().includes(query.toLowerCase())
       ),
-    [items, query]
+    [items, query, typeFilter]
   );
 
   function resetForm() {
@@ -171,6 +210,20 @@ export function QuestionManager() {
           <span className="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-xs px-3 py-1.5 rounded-full font-semibold">
             {items.length} Questions
           </span>
+
+          {/* Type Filter */}
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="bg-zinc-50 dark:bg-[#131823] text-zinc-900 dark:text-zinc-200 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
+          >
+            <option value="">All Types</option>
+            {QUESTION_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
 
           {/* Mode Toggles */}
           <div className="flex items-center bg-zinc-100 dark:bg-[#161b26] p-1 rounded-xl border border-zinc-200 dark:border-white/5">
@@ -303,9 +356,13 @@ export function QuestionManager() {
                       onChange={(e) => setForm({ ...form, type: e.target.value })}
                       className="w-full bg-zinc-50 text-zinc-900 dark:bg-[#131823] dark:text-zinc-200 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
                     >
-                      <option value="mcq">MCQ</option>
-                      <option value="single">Single Choice</option>
-                      <option value="text">Text Input</option>
+                      {QUESTION_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
+                      ))}
+                      <option value="single">Single Choice (legacy)</option>
+                      <option value="text">Text Input (legacy)</option>
                     </select>
                   </div>
 

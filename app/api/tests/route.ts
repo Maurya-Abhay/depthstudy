@@ -16,7 +16,7 @@ async function auth() {
 }
 
 function sameAnswer(a: unknown, b: unknown) {
-  if (typeof a === 'string' && typeof b === 'string') return a.trim() === b.trim();
+  if (typeof a === 'string' && typeof b === 'string') return a.trim().toLowerCase() === b.trim().toLowerCase();
   return JSON.stringify(a) === JSON.stringify(b);
 }
 

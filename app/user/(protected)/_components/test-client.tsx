@@ -12,11 +12,9 @@ import {
   Clock,
   AlertTriangle,
   HelpCircle,
-  Sparkles,
   ShieldAlert,
   Lock,
   CheckCircle2,
-  Grid,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { UserShell } from '@/app/user/(protected)/_components/user-shell';
@@ -28,6 +26,24 @@ type Question = {
   type: string;
   options: string[];
 };
+
+const TYPE_LABELS: Record<string, string> = {
+  mcq: 'MCQ',
+  true_false: 'True / False',
+  code_output: 'Code Output',
+  code_fix: 'Code Fix',
+  scenario: 'Scenario Based',
+  debugging: 'Debugging',
+  best_practice: 'Best Practice',
+  accessibility: 'Accessibility',
+  seo: 'SEO',
+  single: 'Single Choice',
+  text: 'Text Answer',
+};
+
+function typeLabel(type: string) {
+  return TYPE_LABELS[type] ?? 'MCQ';
+}
 
 type Test = {
   id: string;
@@ -55,7 +71,6 @@ export default function SecureTestPage() {
 
   const startedRef = useRef(false);
 
-  // Submit Handler
   const submit = useCallback(async () => {
     if (busy) return;
     setBusy(true);
@@ -87,7 +102,6 @@ export default function SecureTestPage() {
     }
   }, [busy, params.id, attemptId, answers, events, router]);
 
-  // Initial Fetch & Start Assessment
   useEffect(() => {
     let cancelled = false;
 
@@ -141,7 +155,6 @@ export default function SecureTestPage() {
     };
   }, [params.id]);
 
-  // Timer & Auto Save Intervals
   useEffect(() => {
     if (!attemptId) return;
 
@@ -178,14 +191,12 @@ export default function SecureTestPage() {
     };
   }, [attemptId, params.id, answers, events]);
 
-  // Auto-submit on timer expiry
   useEffect(() => {
     if (time === 0 && attemptId && !busy && startedRef.current) {
       void submit();
     }
   }, [time, attemptId, busy, submit]);
 
-  // Fullscreen & Proctored Mode Handler
   useEffect(() => {
     const onFullscreenChange = () => setFocusMode(Boolean(document.fullscreenElement));
     document.addEventListener('fullscreenchange', onFullscreenChange);
@@ -205,7 +216,6 @@ export default function SecureTestPage() {
     }
   };
 
-  // Heavy Anti-Cheat Enforcement Listeners
   useEffect(() => {
     if (!attemptId) return;
 
@@ -250,20 +260,26 @@ export default function SecureTestPage() {
       recordViolation('right_click');
     };
 
+    const onSelectStart = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') e.preventDefault();
+    };
+
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('blur', onWindowBlur);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('contextmenu', onContextMenu);
+    document.addEventListener('selectstart', onSelectStart);
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('blur', onWindowBlur);
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('contextmenu', onContextMenu);
+      document.removeEventListener('selectstart', onSelectStart);
     };
   }, [attemptId]);
 
-  // Navigation Guard Handler
   useEffect(() => {
     const onExitClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -284,32 +300,31 @@ export default function SecureTestPage() {
     return () => document.removeEventListener('click', onExitClick);
   }, [confirm, router]);
 
-  // Loading or Error Screen
   if (!test) {
     return (
       <UserShell>
-        <div className="mx-auto my-16 max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0e131f] p-8 text-center shadow-2xl">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-500 dark:text-rose-400">
-            <ShieldAlert size={28} />
+        <div className="mx-auto my-20 max-w-md rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#121824] p-8 text-center shadow-xl">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400">
+            <ShieldAlert size={24} />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-rose-500 dark:text-rose-400">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400">
             Proctored Session
           </span>
-          <h1 className="mt-1 text-xl font-black text-zinc-900 dark:text-white">
+          <h1 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
             Test Access Error
           </h1>
-          <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">{message}</p>
+          <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">{message}</p>
           <div className="mt-6 flex justify-center">
             {message.toLowerCase().includes('complete') ? (
               <Link
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
                 href="/dashboard/courses"
               >
                 Go to Dashboard
               </Link>
             ) : (
               <Link
-                className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-5 py-2.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 transition hover:bg-slate-200 dark:hover:bg-slate-700"
                 href="/dashboard/tests"
               >
                 Back to Tests
@@ -328,146 +343,171 @@ export default function SecureTestPage() {
 
   return (
     <main
-      className="h-screen w-screen overflow-hidden bg-zinc-50 dark:bg-[#07090e] text-zinc-900 dark:text-zinc-200 select-none p-4 font-sans flex flex-col justify-center items-center"
+      className="min-h-screen w-screen overflow-x-hidden bg-slate-100 dark:bg-[#07090e] text-slate-900 dark:text-slate-200 select-none p-3 sm:p-4 font-sans flex flex-col items-center justify-center"
       onCopy={(e) => e.preventDefault()}
       onCut={(e) => e.preventDefault()}
       onPaste={(e) => e.preventDefault()}
       onDragStart={(e) => e.preventDefault()}
     >
-      <div className="w-full max-w-5xl h-full flex flex-col justify-between space-y-3">
-        {/* Top Control Bar */}
-        <div className="flex shrink-0 items-center justify-between text-xs text-zinc-600 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800/80 pb-2.5">
-          <Link
-            href="/dashboard/tests"
-            className="inline-flex items-center gap-1.5 hover:text-zinc-900 dark:hover:text-white transition-colors font-medium"
-          >
-            <ArrowLeft size={14} /> Exit Test Environment
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-full px-2.5 py-0.5">
-              <Lock size={10} /> Secure Anti-Cheat Active
-            </span>
-            {warningCount > 0 && (
-              <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-full px-2.5 py-0.5 animate-pulse">
-                <AlertTriangle size={10} /> Warnings: {warningCount}
-              </span>
-            )}
-          </div>
-        </div>
+      <div className="w-full max-w-4xl space-y-3">
+        
+        {/* Streamlined Single-Line Header */}
+        <header className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#121824] px-3.5 py-2.5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
+            
+            {/* Left Section: Exit + Title + Status */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Link
+                href="/dashboard/tests"
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                <ArrowLeft size={13} /> Exit
+              </Link>
 
-        {/* Assessment Title Header */}
-        <div className="flex shrink-0 flex-col gap-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0d111c] p-4 shadow-md sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-              <Sparkles size={12} />
-              <span>Assessment Portal</span>
-            </div>
-            <h1 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight">
-              {test.title}
-            </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Total: {questions.length} questions <span className="mx-1">•</span> Passing Target:{' '}
-              <strong className="text-emerald-600 dark:text-emerald-400">{test.passing_score}%</strong>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/80 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white"
-            >
-              {focusMode ? <Minimize size={14} /> : <Maximize size={14} />}
-              <span>{focusMode ? 'Exit Fullscreen' : 'Focus Screen'}</span>
-            </button>
-
-            {/* Timer Badge */}
-            <div
-              className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-1.5 ${
-                isTimeCritical
-                  ? 'border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400 animate-pulse'
-                  : 'border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200'
-              }`}
-            >
-              <Clock size={15} className={isTimeCritical ? 'text-rose-500' : 'text-indigo-600 dark:text-indigo-400'} />
-              <div className="text-right">
-                <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Timer
+              <div className="min-w-0 flex items-center gap-2">
+                <h1 className="truncate text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                  {test.title}
+                </h1>
+                
+                <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 shrink-0">
+                  <span>•</span>
+                  <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-bold">
+                    <Lock size={10} /> Secure Mode
+                  </span>
+                  {warningCount > 0 && (
+                    <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-bold animate-pulse">
+                      • <AlertTriangle size={10} /> {warningCount} warning{warningCount > 1 ? 's' : ''}
+                    </span>
+                  )}
                 </div>
-                <strong className="text-xs sm:text-sm font-black font-mono tracking-wider">
-                  {minutes}:{seconds}
-                </strong>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Question Palette Navigation Matrix */}
-        <div className="shrink-0 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-[#0d111c] p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              <Grid size={12} /> Question Matrix
+            {/* Right Section: Focus Toggle + Timer */}
+            <div className="flex shrink-0 items-center gap-2 ml-auto">
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                {focusMode ? <Minimize size={13} /> : <Maximize size={13} />}
+                <span className="hidden sm:inline text-xs">{focusMode ? 'Exit' : 'Focus'}</span>
+              </button>
+
+              <div
+                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 ${
+                  isTimeCritical
+                    ? 'border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400 animate-pulse'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200'
+                }`}
+              >
+                <Clock size={13} className={isTimeCritical ? 'text-rose-500' : 'text-indigo-600 dark:text-indigo-400'} />
+                <strong className="text-xs font-mono font-bold tracking-wider">{minutes}:{seconds}</strong>
+              </div>
+            </div>
+
+          </div>
+        </header>
+
+        {/* Question Matrix & Progress Bar */}
+        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#121824] px-3.5 py-2 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-1 max-h-[42px] overflow-y-auto">
+              {questions.map((q, idx) => {
+                const isAnswered = answers[q.id] !== undefined;
+                const isCurrent = idx === step;
+
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => setStep(idx)}
+                    className={`h-5 w-5 rounded-md text-[10px] font-bold transition-all ${
+                      isCurrent
+                        ? 'bg-indigo-600 text-white ring-2 ring-indigo-400/50 shadow-xs'
+                        : isAnswered
+                        ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30'
+                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="shrink-0 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              {Object.keys(answers).length}/{questions.length} answered
             </span>
-            <span className="text-[10px] text-zinc-500">
-              Answered: {Object.keys(answers).length} / {questions.length}
-            </span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {questions.map((q, idx) => {
-              const isAnswered = answers[q.id] !== undefined;
-              const isCurrent = idx === step;
 
-              return (
-                <button
-                  key={q.id}
-                  type="button"
-                  onClick={() => setStep(idx)}
-                  className={`h-7 w-7 rounded-lg text-xs font-bold transition-all ${
-                    isCurrent
-                      ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 shadow-md'
-                      : isAnswered
-                      ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30'
-                      : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                  }`}
-                >
-                  {idx + 1}
-                </button>
-              );
-            })}
+          <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div
+              className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-300 rounded-full"
+              style={{
+                width: `${questions.length ? ((step + 1) / questions.length) * 100 : 0}%`,
+              }}
+            />
           </div>
         </div>
 
-        {/* Progress Tracker */}
-        <div className="shrink-0 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800/60">
-          <div
-            className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-300"
-            style={{
-              width: `${questions.length ? ((step + 1) / questions.length) * 100 : 0}%`,
-            }}
-          />
-        </div>
-
-        {/* Active Question Main Card */}
-        <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0d111c] p-5 shadow-xl">
+        {/* Compact Question Body & Options Container */}
+        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#121824] p-4 shadow-sm">
           {question ? (
-            <div className="flex flex-col h-full justify-between overflow-hidden">
-              {/* Question Header Status */}
-              <div className="shrink-0 flex items-center justify-between text-xs border-b border-zinc-200 dark:border-zinc-800/80 pb-3 mb-3">
-                <span className="rounded-md border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-0.5 font-bold text-indigo-600 dark:text-indigo-400">
+            <div className="space-y-3">
+              
+              {/* Question Subheader */}
+              <div className="flex items-center justify-between text-xs border-b border-slate-100 dark:border-slate-800/80 pb-2">
+                <span className="rounded-md border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 font-bold text-indigo-600 dark:text-indigo-400 text-[10px]">
                   Question {step + 1} of {questions.length}
                 </span>
-                <span className="font-semibold text-zinc-500 dark:text-zinc-400">
-                  {Math.round(((step + 1) / questions.length) * 100)}% Completed
+                <span className="rounded-md border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-bold text-amber-600 dark:text-amber-400 text-[10px]">
+                  {typeLabel(question.type)}
                 </span>
               </div>
 
-              {/* Scrollable Question Content (In case options are long) */}
-              <div className="flex-1 overflow-y-auto pr-1 space-y-4">
-                <h2 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white leading-relaxed tracking-wide">
-                  {question.prompt}
-                </h2>
+              {/* Question Text */}
+              <h2 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 leading-normal">
+                {question.prompt}
+              </h2>
 
-                <div className="space-y-2.5">
+              {/* Options Section */}
+              {question.type === 'true_false' ? (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {['True', 'False'].map((option) => {
+                    const isSelected = answers[question.id] === option;
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() =>
+                          setAnswers((current) => ({ ...current, [question.id]: option }))
+                        }
+                        className={`flex items-center justify-center gap-1.5 rounded-lg border p-2.5 text-xs font-semibold transition-all ${
+                          isSelected
+                            ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-600 text-white shadow-xs'
+                            : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:bg-slate-800/50'
+                        }`}
+                      >
+                        <CheckCircle2 className={`h-3.5 w-3.5 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : question.type === 'text' ? (
+                <input
+                  type="text"
+                  value={typeof answers[question.id] === 'string' ? (answers[question.id] as string) : ''}
+                  onChange={(e) =>
+                    setAnswers((current) => ({ ...current, [question.id]: e.target.value }))
+                  }
+                  placeholder="Type your answer here..."
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:outline-none transition-colors"
+                />
+              ) : (
+                <div className="space-y-1.5 pt-0.5">
                   {question.options?.map((option, index) => {
                     const isSelected = answers[question.id] === option;
                     return (
@@ -480,89 +520,90 @@ export default function SecureTestPage() {
                             [question.id]: option,
                           }))
                         }
-                        className={`flex w-full items-center justify-between rounded-xl border p-3.5 text-left transition-all ${
+                        className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left transition-all ${
                           isSelected
-                            ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-950 dark:text-white shadow-md ring-1 ring-indigo-500/50'
-                            : 'border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/40 text-zinc-800 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
+                            ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50/80 dark:bg-indigo-500/10 text-indigo-950 dark:text-white shadow-xs ring-1 ring-indigo-500/30'
+                            : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-300 hover:border-slate-300 dark:hover:bg-slate-800/50'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                            className={`flex h-4 w-4 shrink-0 items-center justify-center rounded text-[10px] font-bold transition-colors ${
                               isSelected
-                                ? 'bg-indigo-600 text-white shadow-sm'
-                                : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400'
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400'
                             }`}
                           >
                             {String.fromCharCode(65 + index)}
                           </span>
-                          <span className="text-xs sm:text-sm font-medium leading-normal">
+                          <span className="text-xs font-medium leading-normal whitespace-pre-wrap">
                             {option}
                           </span>
                         </div>
 
                         <div
-                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-all ${
+                          className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-all ${
                             isSelected
                               ? 'border-indigo-500 bg-indigo-600 text-white'
-                              : 'border-zinc-300 dark:border-zinc-700'
+                              : 'border-slate-300 dark:border-slate-700'
                           }`}
                         >
-                          {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
+                          {isSelected && <CheckCircle2 className="h-2.5 w-2.5 text-white" />}
                         </div>
                       </button>
                     );
                   })}
                 </div>
-              </div>
+              )}
 
-              {/* Bottom Control Actions */}
-              <div className="shrink-0 flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800/80 pt-3 mt-3">
+              {/* Navigation Footer Buttons */}
+              <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-2.5 mt-2">
                 <button
                   type="button"
                   disabled={step === 0}
                   onClick={() => setStep((value) => value - 1)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-3.5 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  <ChevronLeft size={16} /> Previous
+                  <ChevronLeft size={14} /> Previous
                 </button>
 
                 {step < questions.length - 1 ? (
                   <button
                     type="button"
                     onClick={() => setStep((value) => value + 1)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-500"
+                    className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-500"
                   >
-                    Next Question <ChevronRight size={16} />
+                    Next <ChevronRight size={14} />
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={submit}
                     disabled={busy}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
                   >
-                    <Send size={14} />
-                    <span>{busy ? 'Submitting Test...' : 'Finish & Submit'}</span>
+                    <Send size={12} />
+                    <span>{busy ? 'Submitting...' : 'Finish & Submit'}</span>
                   </button>
                 )}
               </div>
+
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center text-zinc-500 dark:text-zinc-400">
-              <HelpCircle size={32} className="mb-2 text-zinc-400 dark:text-zinc-500" />
-              <p className="text-xs font-semibold">No questions available in this test.</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center text-slate-500 dark:text-slate-400">
+              <HelpCircle size={28} className="mb-2 text-slate-400 dark:text-slate-500" />
+              <p className="text-xs font-medium">No questions available in this test.</p>
             </div>
           )}
 
-          {/* Alert Message Box */}
           {message && (
-            <div className="mt-2 shrink-0 flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 p-2.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-              <AlertTriangle size={15} className="shrink-0" />
+            <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 p-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+              <AlertTriangle size={13} className="shrink-0" />
               <span>{message}</span>
             </div>
           )}
         </div>
+
       </div>
     </main>
   );
