@@ -224,7 +224,7 @@ export function UserShell({ children }: { children: React.ReactNode }) {
                             <div className="pl-2.5 space-y-1 mt-1">
                               {topicProblems.map((problem) => (
                                 <Link
-                                  href={`/dashboard/dsa?problem=${encodeURIComponent(
+                                  href={`/dashboard/dsa/problem/${encodeURIComponent(
                                     problem.slug
                                   )}`}
                                   key={problem.id}

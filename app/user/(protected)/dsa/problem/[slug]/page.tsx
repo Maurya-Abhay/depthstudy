@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ChevronRight, BrainCircuit } from 'lucide-react';
-import { getDsaProblem } from '@/services/dsa';
+import { getDsaProblem, getDsaTopics, getDsaNavigationProblems } from '@/services/dsa';
 import { ProblemWorkspace } from '@/app/user/(protected)/_components/problem-workspace';
 
 export default async function ProblemPage({
@@ -10,7 +10,11 @@ export default async function ProblemPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { problem } = await getDsaProblem(slug);
+  const [{ problem }, topics, { problems: navigationProblems }] = await Promise.all([
+    getDsaProblem(slug),
+    getDsaTopics(),
+    getDsaNavigationProblems(),
+  ]);
 
   if (!problem) {
     notFound();
@@ -50,7 +54,11 @@ export default async function ProblemPage({
 
         {/* Interactive Workspace Component Wrapper */}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#121824] p-2 shadow-xl dark:shadow-2xl">
-          <ProblemWorkspace problem={problem} />
+          <ProblemWorkspace
+            problem={problem}
+            topics={topics}
+            navigationProblems={navigationProblems}
+          />
         </div>
       </div>
     </main>

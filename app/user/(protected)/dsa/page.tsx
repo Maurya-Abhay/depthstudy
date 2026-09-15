@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { CircleCheck, Filter, AlertCircle } from 'lucide-react';
 import { createServerSupabaseClient } from '@/services/supabase-server';
 import { getDsaProblems, getDsaTopics } from '@/services/dsa';
@@ -7,11 +8,22 @@ import { ProblemList } from '@/app/user/(protected)/_components/problem-list';
 export default async function DsaHome({
   searchParams,
 }: {
-  searchParams: Promise<{ topic?: string; difficulty?: string }>;
+  searchParams: Promise<{ topic?: string; difficulty?: string; problem?: string }>;
 }) {
   const params = await searchParams;
   const { problems: allProblems, error } = await getDsaProblems();
   const topics = await getDsaTopics();
+
+  // Legacy links like /dsa?problem=<slug-or-id> should open the workspace
+  // instead of being silently ignored by the problems list.
+  const requestedProblem = params.problem
+    ? (allProblems ?? []).find(
+        (p) => p.slug === params.problem || p.id === params.problem
+      )
+    : undefined;
+  if (requestedProblem) {
+    redirect(`/dsa/problem/${encodeURIComponent(requestedProblem.slug)}`);
+  }
 
   let solvedRows: Array<{ problem_id: string; status: string }> = [];
 
